@@ -3,11 +3,12 @@
 // generados por Gemini. La API key vive como secreto GEMINI_API_KEY (nunca en el frontend).
 
 // Modelos a intentar, en orden. Se usan con el prefijo "models/" (nombre completo
-// que devuelve la API). Si el primero da 404, se prueba el siguiente.
+// que devuelve la API). Si uno da error (p. ej. 404 por modelo retirado), se prueba el siguiente.
 const MODELOS = [
-  "models/gemini-2.5-flash",
   "models/gemini-flash-latest",
-  "models/gemini-2.5-flash-lite"
+  "models/gemini-2.5-flash",
+  "models/gemini-3.5-flash",
+  "models/gemini-2.5-pro"
 ];
 
 // Límite de caracteres del texto que enviamos al modelo (evita costos/errores por textos enormes).
