@@ -117,7 +117,9 @@ async function generarConIA(texto, materia) {
 
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok) {
-    throw new Error(data.error || "Error al generar el contenido.");
+    let msg = data.error || "Error al generar el contenido.";
+    if (data.detalle) msg += " (" + data.detalle + ")";
+    throw new Error(msg);
   }
   return data;
 }

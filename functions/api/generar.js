@@ -2,7 +2,13 @@
 // Recibe { texto, materia } y devuelve { resumen, puntos, flashcards, preguntas }
 // generados por Gemini. La API key vive como secreto GEMINI_API_KEY (nunca en el frontend).
 
-const MODELO = "gemini-2.5-flash";
+// Modelos a intentar, en orden. Se usan con el prefijo "models/" (nombre completo
+// que devuelve la API). Si el primero da 404, se prueba el siguiente.
+const MODELOS = [
+  "models/gemini-2.5-flash",
+  "models/gemini-flash-latest",
+  "models/gemini-2.5-flash-lite"
+];
 
 // Límite de caracteres del texto que enviamos al modelo (evita costos/errores por textos enormes).
 const MAX_CHARS = 100000;
@@ -34,9 +40,6 @@ export async function onRequestPost(context) {
 
   const prompt = construirPrompt(texto, materia);
 
-  const url = "https://generativelanguage.googleapis.com/v1beta/models/" +
-    MODELO + ":generateContent?key=" + encodeURIComponent(apiKey);
-
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
@@ -45,20 +48,31 @@ export async function onRequestPost(context) {
     }
   };
 
-  let geminiResp;
-  try {
-    geminiResp = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-  } catch (e) {
-    return json({ error: "No se pudo contactar a Gemini: " + e.message }, 502);
+  // Intenta cada modelo en orden; usa el primero que responda bien.
+  let geminiResp = null;
+  let ultimoDetalle = "";
+  for (const modelo of MODELOS) {
+    const url = "https://generativelanguage.googleapis.com/v1beta/" +
+      modelo + ":generateContent?key=" + encodeURIComponent(apiKey);
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (r.ok) {
+        geminiResp = r;
+        break;
+      }
+      ultimoDetalle = "Modelo " + modelo + " → HTTP " + r.status + ": " +
+        (await r.text()).slice(0, 300);
+    } catch (e) {
+      ultimoDetalle = "Modelo " + modelo + " → " + e.message;
+    }
   }
 
-  if (!geminiResp.ok) {
-    const detalle = await geminiResp.text();
-    return json({ error: "Gemini respondió con error (" + geminiResp.status + ").", detalle }, 502);
+  if (!geminiResp) {
+    return json({ error: "Gemini respondió con error.", detalle: ultimoDetalle }, 502);
   }
 
   const data = await geminiResp.json();
