@@ -29,10 +29,11 @@
     <!-- Subir archivo -->
     <section class="upload-box">
       <p class="upload-title">📤 Sube tu material de estudio</p>
-      <p class="hint">Acepta PDF, Word (.docx) o texto (.txt). La IA generará el resumen,
-        los puntos clave, las flashcards y las preguntas.</p>
+      <p class="hint">Acepta PDF, Word (.docx) o texto (.txt). <strong>Puedes subir varios
+        archivos a la vez</strong> (por ejemplo, la antología y un examen de práctica): la IA
+        combinará todo e imitará el estilo de las preguntas de ejemplo si las incluyes.</p>
       <div class="upload-controls">
-        <input type="file" id="file-input" accept=".pdf,.docx,.txt" />
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt" multiple />
         <button id="btn-generar" class="btn btn-primary">✨ Generar</button>
       </div>
       <p id="file-status" class="file-status"></p>

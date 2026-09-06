@@ -11,7 +11,8 @@ const MODELOS = [
 ];
 
 // Límite de caracteres del texto que enviamos al modelo (evita costos/errores por textos enormes).
-const MAX_CHARS = 100000;
+// Se subió para permitir combinar varios documentos (p. ej. antología + examen de práctica).
+const MAX_CHARS = 200000;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -131,11 +132,18 @@ function construirPrompt(texto, materia) {
     "",
     "Reglas:",
     "- 'puntos': entre 4 y 8 bloques temáticos, cada uno con 2 a 5 items.",
-    "- 'flashcards': entre 10 y 15 tarjetas de pregunta/respuesta.",
-    "- 'preguntas': entre 6 y 10 preguntas de selección única con exactamente 3 opciones.",
+    "- 'flashcards': entre 12 y 18 tarjetas de pregunta/respuesta.",
+    "- 'preguntas': entre 15 y 20 preguntas de selección única con exactamente 3 opciones.",
     "- 'correcta' es el índice (0, 1 o 2) de la opción correcta.",
     "- Usa un lenguaje claro y apropiado para estudiantes de noveno año.",
     "- Básate SOLO en el material dado; no inventes datos que no estén relacionados.",
+    "- El material puede incluir VARIOS documentos (marcados con '===== DOCUMENTO: ... ====='),",
+    "  por ejemplo un texto de estudio y un examen de práctica con preguntas de ejemplo.",
+    "- MUY IMPORTANTE: si el material contiene preguntas de ejemplo (un examen o práctica),",
+    "  IMITA fielmente su ESTILO, formato y nivel de dificultad al crear las preguntas nuevas",
+    "  (por ejemplo, enunciados con un texto o esquema para leer y luego 3 opciones A/B/C).",
+    "  Las preguntas nuevas deben parecerse a las que realmente saldrían en ese examen.",
+    "- No copies textualmente las preguntas de ejemplo: crea preguntas nuevas del mismo estilo.",
     "",
     "MATERIAL DE ESTUDIO:",
     '"""',

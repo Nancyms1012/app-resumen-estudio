@@ -129,9 +129,9 @@ async function generarConIA(texto, materia) {
 // ===================================================================
 btnGenerar.addEventListener("click", async () => {
   limpiarError();
-  const file = fileInput.files[0];
-  if (!file) {
-    mostrarError("Primero selecciona un archivo (PDF, Word o texto).");
+  const files = Array.from(fileInput.files || []);
+  if (files.length === 0) {
+    mostrarError("Primero selecciona uno o varios archivos (PDF, Word o texto).");
     return;
   }
 
@@ -141,19 +141,31 @@ btnGenerar.addEventListener("click", async () => {
   try {
     btnGenerar.disabled = true;
     contenido.style.display = "none";
-    mostrarCarga("📖 Leyendo el archivo…");
-    const texto = await extraerTexto(file);
 
-    if (!texto || texto.trim().length < 30) {
-      throw new Error("No se pudo extraer texto del archivo (¿es un PDF escaneado como imagen?).");
+    // Extrae y combina el texto de todos los archivos.
+    const partes = [];
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      mostrarCarga("📖 Leyendo archivo " + (i + 1) + " de " + files.length + ": " + f.name + "…");
+      const t = await extraerTexto(f);
+      if (t && t.trim().length >= 20) {
+        partes.push("===== DOCUMENTO: " + f.name + " =====\n" + t.trim());
+      }
     }
 
+    if (partes.length === 0) {
+      throw new Error("No se pudo extraer texto de los archivos (¿son PDF escaneados como imagen?).");
+    }
+
+    const textoCombinado = partes.join("\n\n");
+    const nombres = files.map(f => f.name).join(", ");
+
     mostrarCarga("🤖 Generando resumen, flashcards y preguntas con IA…");
-    const resultado = await generarConIA(texto, materiaTexto);
+    const resultado = await generarConIA(textoCombinado, materiaTexto);
 
     aplicarResultado(resultado);
-    guardar(materiaValor, file.name, resultado);
-    fileStatus.textContent = "✅ Generado a partir de: " + file.name;
+    guardar(materiaValor, nombres, resultado);
+    fileStatus.textContent = "✅ Generado a partir de: " + nombres;
     ocultarCarga();
     contenido.style.display = "";
   } catch (e) {
