@@ -298,3 +298,14 @@ body {
   margin-bottom: 1rem;
   font-weight: 600;
 }
+
+
+/* ===== Subtítulos de grupo de preguntas ===== */
+.grupo-subtitulo {
+  color: var(--azul-osc);
+  margin: 1.2rem 0 0.6rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 2px solid #dbeafe;
+  font-size: 1.1rem;
+}
+.grupo-subtitulo:first-child { margin-top: 0; }

@@ -110,8 +110,15 @@ export async function onRequestPost(context) {
     resumen: typeof resultado.resumen === "string" ? resultado.resumen : "",
     puntos: Array.isArray(resultado.puntos) ? resultado.puntos : [],
     flashcards: Array.isArray(resultado.flashcards) ? resultado.flashcards : [],
-    preguntas: Array.isArray(resultado.preguntas) ? resultado.preguntas : []
+    preguntasExamen: Array.isArray(resultado.preguntasExamen) ? resultado.preguntasExamen : [],
+    preguntasNuevas: Array.isArray(resultado.preguntasNuevas) ? resultado.preguntasNuevas : [],
+    // Compatibilidad: si el modelo usara el campo viejo 'preguntas', lo tratamos como nuevas.
+    _preguntasLegacy: Array.isArray(resultado.preguntas) ? resultado.preguntas : []
   };
+  if (salida.preguntasNuevas.length === 0 && salida._preguntasLegacy.length > 0) {
+    salida.preguntasNuevas = salida._preguntasLegacy;
+  }
+  delete salida._preguntasLegacy;
 
   return json(salida, 200);
 }
@@ -127,23 +134,28 @@ function construirPrompt(texto, materia) {
     '  "resumen": "string con un resumen claro del material en 2 a 4 párrafos",',
     '  "puntos": [ { "titulo": "string", "items": ["string", "string"] } ],',
     '  "flashcards": [ { "q": "pregunta corta", "a": "respuesta corta" } ],',
-    '  "preguntas": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ]',
+    '  "preguntasExamen": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ],',
+    '  "preguntasNuevas": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ]',
     "}",
     "",
     "Reglas:",
     "- 'puntos': entre 4 y 8 bloques temáticos, cada uno con 2 a 5 items.",
     "- 'flashcards': entre 12 y 18 tarjetas de pregunta/respuesta.",
-    "- 'preguntas': entre 15 y 20 preguntas de selección única con exactamente 3 opciones.",
     "- 'correcta' es el índice (0, 1 o 2) de la opción correcta.",
     "- Usa un lenguaje claro y apropiado para estudiantes de noveno año.",
     "- Básate SOLO en el material dado; no inventes datos que no estén relacionados.",
-    "- El material puede incluir VARIOS documentos (marcados con '===== DOCUMENTO: ... ====='),",
-    "  por ejemplo un texto de estudio y un examen de práctica con preguntas de ejemplo.",
-    "- MUY IMPORTANTE: si el material contiene preguntas de ejemplo (un examen o práctica),",
-    "  IMITA fielmente su ESTILO, formato y nivel de dificultad al crear las preguntas nuevas",
-    "  (por ejemplo, enunciados con un texto o esquema para leer y luego 3 opciones A/B/C).",
-    "  Las preguntas nuevas deben parecerse a las que realmente saldrían en ese examen.",
-    "- No copies textualmente las preguntas de ejemplo: crea preguntas nuevas del mismo estilo.",
+    "- El material puede incluir VARIOS documentos (marcados con '===== DOCUMENTO: ... =====').",
+    "",
+    "Sobre las DOS listas de preguntas:",
+    "- 'preguntasExamen': si en el material hay un EXAMEN o PRÁCTICA con preguntas, COPIA esas",
+    "  preguntas TAL CUAL (mismo enunciado y mismas opciones). Determina la opción 'correcta'",
+    "  usando la información del material (muchos exámenes incluyen sus respuestas). Si no hay",
+    "  ningún examen con preguntas en el material, deja 'preguntasExamen' como lista vacía [].",
+    "- 'preguntasNuevas': crea entre 15 y 20 preguntas NUEVAS de selección única con exactamente",
+    "  3 opciones. Deben IMITAR el estilo, formato y dificultad de las del examen (enunciado con",
+    "  texto/esquema para leer y opciones A/B/C tipo MEP), pero SIN repetir las de 'preguntasExamen'.",
+    "  Cubre distintos temas del material. Si no hay examen de referencia, igual crea 15-20 preguntas",
+    "  de buena calidad basadas en el contenido.",
     "",
     "MATERIAL DE ESTUDIO:",
     '"""',

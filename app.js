@@ -38,7 +38,7 @@ const quizReset = document.getElementById("quiz-reset");
 
 // Estado en memoria
 let FLASHCARDS = [];
-let PREGUNTAS = [];
+let PREGUNTAS = []; // lista plana; cada item: { texto, opciones, correcta, grupo }
 let fcIndex = 0;
 
 // ===================================================================
@@ -201,9 +201,14 @@ function aplicarResultado(r) {
   fcIndex = 0;
   renderFlashcard();
 
-  // Preguntas
-  PREGUNTAS = (r.preguntas || []).filter(p =>
-    p && p.texto && Array.isArray(p.opciones) && p.opciones.length >= 2);
+  // Preguntas: dos grupos (del examen y nuevas). Compatibilidad con formato viejo 'preguntas'.
+  const valida = p => p && p.texto && Array.isArray(p.opciones) && p.opciones.length >= 2;
+  const examen = (r.preguntasExamen || []).filter(valida).map(p => ({ ...p, grupo: "examen" }));
+  let nuevas = (r.preguntasNuevas || []).filter(valida).map(p => ({ ...p, grupo: "nuevas" }));
+  if (nuevas.length === 0 && Array.isArray(r.preguntas)) {
+    nuevas = r.preguntas.filter(valida).map(p => ({ ...p, grupo: "nuevas" }));
+  }
+  PREGUNTAS = examen.concat(nuevas);
   renderQuiz();
 
   // Volver al primer tab
@@ -261,7 +266,19 @@ function renderQuiz() {
     return;
   }
 
+  let grupoActual = null;
   PREGUNTAS.forEach((p, i) => {
+    // Inserta un subtítulo cuando cambia el grupo.
+    if (p.grupo !== grupoActual) {
+      grupoActual = p.grupo;
+      const sub = document.createElement("h3");
+      sub.className = "grupo-subtitulo";
+      sub.textContent = grupoActual === "examen"
+        ? "📋 Del examen"
+        : "✨ Nuevas de práctica";
+      quizForm.appendChild(sub);
+    }
+
     const div = document.createElement("div");
     div.className = "pregunta";
     div.dataset.index = i;
