@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asistente de Estudio · Estudios Sociales 9°</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <h1>📚 Asistente de Estudio</h1>
+      <p class="subtitle">Estudios Sociales · Noveno año · CONED / MEP</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Selector de tema -->
+    <section class="tema-bar">
+      <label for="tema-select">Tema:</label>
+      <select id="tema-select">
+        <option value="t1" selected>Unidad 1 · Tema 1 — Las sociedades medievales (siglos VI-XV)</option>
+      </select>
+      <span class="badge">Demo</span>
+    </section>
+
+    <!-- Navegación de tabs -->
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="resumen" role="tab">📄 Resumen</button>
+      <button class="tab" data-tab="puntos" role="tab">🔑 Puntos clave</button>
+      <button class="tab" data-tab="flashcards" role="tab">🃏 Flashcards</button>
+      <button class="tab" data-tab="preguntas" role="tab">❓ Preguntas</button>
+    </nav>
+
+    <!-- TAB: Resumen -->
+    <section class="panel active" id="panel-resumen" role="tabpanel">
+      <h2>Resumen</h2>
+      <p>El <strong>Imperio Romano</strong> (gobernado por emperadores desde el 29 a.C. con Augusto)
+      entró en decadencia a partir del <strong>siglo III d.C.</strong> por <em>causas internas</em>
+      (gobernantes débiles, corrupción, ambición de los generales, guerras civiles, persecución de
+      cristianos, crisis social y económica) y <em>causas externas</em> (las <strong>invasiones
+      bárbaras</strong>).</p>
+
+      <p>En el año <strong>395 d.C.</strong>, el emperador <strong>Teodosio</strong> dividió el Imperio
+      entre sus dos hijos: <strong>Arcadio</strong> (Imperio Romano de <strong>Oriente</strong>, capital
+      Constantinopla) y <strong>Honorio</strong> (Imperio Romano de <strong>Occidente</strong>, capital
+      Milán/Roma). El Imperio de Occidente cayó en el <strong>476 d.C.</strong>, cuando el jefe bárbaro
+      <strong>Odoacro</strong> depuso al último emperador, <strong>Rómulo Augústulo</strong>.</p>
+
+      <p>Tras la caída se formaron <strong>reinos bárbaros</strong> que, al adoptar el
+      <strong>cristianismo</strong>, ayudaron a conservar la cultura clásica (latín, derecho romano) y
+      dieron gran poder a la <strong>Iglesia Católica</strong>. Surgió luego el <strong>Imperio
+      Carolingio</strong> (Pipino y su hijo <strong>Carlomagno</strong>), antecedente del feudalismo.
+      El <strong>Imperio de Oriente (Bizantino)</strong> sobrevivió casi diez siglos hasta que los
+      <strong>turcos otomanos tomaron Constantinopla en 1453</strong>.</p>
+
+      <p>La caída del Imperio de Occidente destruyó el comercio y la economía monetaria: la gente huyó
+      de las ciudades al campo (<strong>economía de autoconsumo</strong>), y los <strong>señores
+      locales</strong> ganaron poder frente a reyes débiles. Así nació el <strong>feudalismo</strong>:
+      un pacto de obediencia y servicio (sobre todo militar) de un <strong>vasallo</strong> hacia un
+      <strong>señor</strong> más poderoso, a cambio de protección y de tierras llamadas
+      <strong>feudos</strong>.</p>
+    </section>
+
+    <!-- TAB: Puntos clave -->
+    <section class="panel" id="panel-puntos" role="tabpanel">
+      <h2>Puntos clave</h2>
+
+      <div class="card">
+        <h3>El Imperio Romano</h3>
+        <ul>
+          <li>Etapa gobernada por emperadores; poder absoluto (político, administrativo, religioso y militar).</li>
+          <li>Inicio: <strong>29 a.C.</strong> (Augusto/Octavio) → Fin en Occidente: <strong>476 d.C.</strong> (Rómulo Augústulo).</li>
+          <li>Abarcaba 3 continentes: sur/oeste de Europa, oeste de Asia y norte de África.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Causas internas de la caída</h3>
+        <ul>
+          <li>Debilidad del gobierno, corrupción, ambición de los generales.</li>
+          <li>Guerras civiles por más de un siglo; el ejército elegía y asesinaba emperadores.</li>
+          <li>Persecución de cristianos + crisis social y económica.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Causas externas</h3>
+        <ul>
+          <li>Invasiones bárbaras: Visigodos (Toledo), Anglos y Sajones (Inglaterra), Suevos/Vándalos/Alanos, <strong>Hunos (Atila)</strong>, Francos y Burgundios.</li>
+          <li>Atila fue vencido en la batalla de los <strong>Campos Cataláunicos</strong>; el Papa <strong>León I</strong> salvó a Roma.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>División del Imperio (395 d.C.)</h3>
+        <ul>
+          <li><strong>Oriente</strong> → Arcadio, capital <strong>Constantinopla</strong>.</li>
+          <li><strong>Occidente</strong> → Honorio, capital Milán/Roma.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Imperio Carolingio</h3>
+        <ul>
+          <li>Pipino inicia la <strong>Dinastía Carolingia</strong> (754) con apoyo del Papa.</li>
+          <li><strong>Carlomagno</strong> reunifica y expande el imperio (771-814) → <strong>antecedente del feudalismo</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Imperio Bizantino (Oriente)</h3>
+        <ul>
+          <li>Sobrevivió ~10 siglos; Constantinopla = "Nueva Roma" (hoy <strong>Estambul</strong>).</li>
+          <li><strong>Cisma de 1054</strong>: ruptura religiosa Oriente-Occidente.</li>
+          <li>Cae en <strong>1453</strong> ante los turcos otomanos.</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>El Feudalismo</h3>
+        <ul>
+          <li>Nace por: inseguridad, fin del comercio, economía de autoconsumo, reyes débiles.</li>
+          <li><strong>Vasallo</strong> = hombre libre que debe servicio militar al <strong>Señor</strong>.</li>
+          <li><strong>Señor</strong> = protege y da tierras (<strong>feudo</strong>).</li>
+          <li>La <strong>Iglesia</strong> = única institución estable → cultura <strong>teocéntrica</strong>.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- TAB: Flashcards -->
+    <section class="panel" id="panel-flashcards" role="tabpanel">
+      <h2>Flashcards</h2>
+      <p class="hint">Haz clic en la tarjeta para ver la respuesta. Usa los botones para avanzar.</p>
+
+      <div class="flashcard-area">
+        <div id="flashcard" class="flashcard">
+          <div class="flashcard-inner">
+            <div class="flashcard-front"><span id="fc-front"></span></div>
+            <div class="flashcard-back"><span id="fc-back"></span></div>
+          </div>
+        </div>
+        <div class="flashcard-controls">
+          <button id="fc-prev" class="btn">← Anterior</button>
+          <span id="fc-counter" class="fc-counter">1 / 15</span>
+          <button id="fc-next" class="btn">Siguiente →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: Preguntas -->
+    <section class="panel" id="panel-preguntas" role="tabpanel">
+      <h2>Preguntas de práctica</h2>
+      <p class="hint">Selecciona una respuesta en cada pregunta. Al final presiona "Calificar".</p>
+      <form id="quiz-form"></form>
+      <div class="quiz-actions">
+        <button id="quiz-check" class="btn btn-primary" type="button">Calificar</button>
+        <button id="quiz-reset" class="btn" type="button">Reiniciar</button>
+      </div>
+      <div id="quiz-result" class="quiz-result" hidden></div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <p>Demo estática · Contenido del Tema 1. La versión con IA generará esto para cualquier archivo. 🚀</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

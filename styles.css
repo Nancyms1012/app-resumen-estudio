@@ -1,0 +1,240 @@
+/* ===== Base ===== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --azul: #2563eb;
+  --azul-osc: #1e40af;
+  --verde: #16a34a;
+  --rojo: #dc2626;
+  --gris-bg: #f1f5f9;
+  --gris-card: #ffffff;
+  --gris-borde: #e2e8f0;
+  --texto: #1e293b;
+  --texto-suave: #64748b;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--gris-bg);
+  color: var(--texto);
+  line-height: 1.6;
+}
+
+/* ===== Header ===== */
+.app-header {
+  background: linear-gradient(135deg, var(--azul), var(--azul-osc));
+  color: #fff;
+  padding: 1.5rem 1rem;
+  text-align: center;
+}
+.app-header h1 { font-size: 1.6rem; }
+.subtitle { opacity: 0.9; font-size: 0.95rem; margin-top: 0.25rem; }
+
+/* ===== Contenedor ===== */
+.container {
+  max-width: 860px;
+  margin: 1.25rem auto;
+  padding: 0 1rem;
+}
+
+/* ===== Barra de tema ===== */
+.tema-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: var(--gris-card);
+  border: 1px solid var(--gris-borde);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+.tema-bar label { font-weight: 600; }
+.tema-bar select {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.5rem;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.badge {
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
+/* ===== Tabs ===== */
+.tabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+.tab {
+  flex: 1;
+  min-width: 120px;
+  padding: 0.7rem 0.5rem;
+  border: 1px solid var(--gris-borde);
+  background: var(--gris-card);
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--texto-suave);
+  transition: all 0.15s;
+}
+.tab:hover { background: #e0e7ff; }
+.tab.active {
+  background: var(--azul);
+  color: #fff;
+  border-color: var(--azul);
+}
+
+/* ===== Paneles ===== */
+.panel {
+  display: none;
+  background: var(--gris-card);
+  border: 1px solid var(--gris-borde);
+  border-radius: 12px;
+  padding: 1.5rem;
+  animation: fade 0.2s ease;
+}
+.panel.active { display: block; }
+.panel h2 { color: var(--azul-osc); margin-bottom: 1rem; }
+.panel p { margin-bottom: 0.9rem; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+
+/* ===== Cards de puntos clave ===== */
+.card {
+  background: #f8fafc;
+  border-left: 4px solid var(--azul);
+  border-radius: 8px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.card h3 { color: var(--azul-osc); margin-bottom: 0.5rem; font-size: 1.05rem; }
+.card ul { padding-left: 1.2rem; }
+.card li { margin-bottom: 0.35rem; }
+
+.hint { color: var(--texto-suave); font-size: 0.9rem; margin-bottom: 1rem; }
+
+/* ===== Flashcards ===== */
+.flashcard-area { text-align: center; }
+.flashcard {
+  perspective: 1000px;
+  width: 100%;
+  max-width: 480px;
+  height: 220px;
+  margin: 0 auto 1rem;
+  cursor: pointer;
+}
+.flashcard-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.5s;
+  transform-style: preserve-3d;
+}
+.flashcard.flipped .flashcard-inner { transform: rotateY(180deg); }
+.flashcard-front, .flashcard-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+.flashcard-front {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: var(--azul-osc);
+  font-weight: 600;
+  border: 2px solid #93c5fd;
+}
+.flashcard-back {
+  background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+  color: #14532d;
+  transform: rotateY(180deg);
+  border: 2px solid #86efac;
+}
+.flashcard-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.fc-counter { font-weight: 600; color: var(--texto-suave); min-width: 56px; }
+
+/* ===== Botones ===== */
+.btn {
+  padding: 0.55rem 1.1rem;
+  border: 1px solid var(--gris-borde);
+  background: var(--gris-card);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.15s;
+}
+.btn:hover { background: #e0e7ff; }
+.btn-primary {
+  background: var(--verde);
+  color: #fff;
+  border-color: var(--verde);
+}
+.btn-primary:hover { background: #15803d; }
+
+/* ===== Quiz ===== */
+.pregunta {
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+.pregunta-texto { font-weight: 600; margin-bottom: 0.7rem; }
+.opcion {
+  display: block;
+  padding: 0.5rem 0.7rem;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-bottom: 0.35rem;
+  transition: background 0.15s;
+}
+.opcion:hover { background: #f1f5f9; }
+.opcion input { margin-right: 0.5rem; }
+.opcion.correcta { background: #dcfce7; border: 1px solid var(--verde); }
+.opcion.incorrecta { background: #fee2e2; border: 1px solid var(--rojo); }
+
+.quiz-actions { display: flex; gap: 0.6rem; margin-top: 0.5rem; }
+.quiz-result {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ===== Footer ===== */
+.app-footer {
+  text-align: center;
+  color: var(--texto-suave);
+  font-size: 0.85rem;
+  padding: 1.5rem 1rem;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 560px) {
+  .tab { min-width: calc(50% - 0.2rem); }
+  .flashcard { height: 200px; }
+}
