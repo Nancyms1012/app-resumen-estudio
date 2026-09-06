@@ -309,3 +309,38 @@ body {
   font-size: 1.1rem;
 }
 .grupo-subtitulo:first-child { margin-top: 0; }
+
+
+/* ===== Lista de archivos acumulados ===== */
+.file-list {
+  list-style: none;
+  margin: 0.9rem auto 0;
+  padding: 0;
+  max-width: 460px;
+  text-align: left;
+}
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  background: #f8fafc;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.9rem;
+  word-break: break-all;
+}
+.file-remove {
+  border: none;
+  background: #fee2e2;
+  color: var(--rojo);
+  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  cursor: pointer;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.file-remove:hover { background: #fecaca; }

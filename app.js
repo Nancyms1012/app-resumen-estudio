@@ -11,8 +11,10 @@ const STORAGE_KEY = "asistenteEstudio_v1";
 // ----- Elementos del DOM -----
 const materiaSelect = document.getElementById("materia-select");
 const fileInput = document.getElementById("file-input");
+const btnAgregar = document.getElementById("btn-agregar");
 const btnGenerar = document.getElementById("btn-generar");
 const fileStatus = document.getElementById("file-status");
+const fileList = document.getElementById("file-list");
 const loading = document.getElementById("loading");
 const loadingText = document.getElementById("loading-text");
 const errorBox = document.getElementById("error-box");
@@ -40,6 +42,46 @@ const quizReset = document.getElementById("quiz-reset");
 let FLASHCARDS = [];
 let PREGUNTAS = []; // lista plana; cada item: { texto, opciones, correcta, grupo }
 let fcIndex = 0;
+let archivos = []; // lista propia que ACUMULA archivos de distintas carpetas
+
+// ===================================================================
+//  Lista de archivos acumulados (Opción C)
+// ===================================================================
+// Al hacer clic en "Agregar", abrimos el selector de archivos.
+btnAgregar.addEventListener("click", () => fileInput.click());
+
+// Cada vez que se eligen archivos, se SUMAN a la lista (evitando duplicados por nombre+tamaño).
+fileInput.addEventListener("change", () => {
+  const nuevos = Array.from(fileInput.files || []);
+  nuevos.forEach(f => {
+    const yaEsta = archivos.some(a => a.name === f.name && a.size === f.size);
+    if (!yaEsta) archivos.push(f);
+  });
+  fileInput.value = ""; // permite volver a elegir el mismo archivo si hiciera falta
+  renderListaArchivos();
+});
+
+function renderListaArchivos() {
+  fileList.innerHTML = "";
+  archivos.forEach((f, i) => {
+    const li = document.createElement("li");
+    li.className = "file-item";
+    const nombre = document.createElement("span");
+    nombre.textContent = "📄 " + f.name;
+    const quitar = document.createElement("button");
+    quitar.className = "file-remove";
+    quitar.type = "button";
+    quitar.textContent = "✖";
+    quitar.title = "Quitar";
+    quitar.addEventListener("click", () => {
+      archivos.splice(i, 1);
+      renderListaArchivos();
+    });
+    li.appendChild(nombre);
+    li.appendChild(quitar);
+    fileList.appendChild(li);
+  });
+}
 
 // ===================================================================
 //  Navegación de tabs
@@ -129,9 +171,9 @@ async function generarConIA(texto, materia) {
 // ===================================================================
 btnGenerar.addEventListener("click", async () => {
   limpiarError();
-  const files = Array.from(fileInput.files || []);
+  const files = archivos.slice();
   if (files.length === 0) {
-    mostrarError("Primero selecciona uno o varios archivos (PDF, Word o texto).");
+    mostrarError("Primero agrega uno o varios archivos (PDF, Word o texto).");
     return;
   }
 
@@ -364,6 +406,8 @@ materiaSelect.addEventListener("change", () => {
     contenido.style.display = "none";
   }
   fileInput.value = "";
+  archivos = [];
+  renderListaArchivos();
 });
 
 // ===================================================================

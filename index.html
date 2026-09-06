@@ -29,13 +29,16 @@
     <!-- Subir archivo -->
     <section class="upload-box">
       <p class="upload-title">📤 Sube tu material de estudio</p>
-      <p class="hint">Acepta PDF, Word (.docx) o texto (.txt). <strong>Puedes subir varios
-        archivos a la vez</strong> (por ejemplo, la antología y un examen de práctica): la IA
-        combinará todo e imitará el estilo de las preguntas de ejemplo si las incluyes.</p>
+      <p class="hint">Acepta PDF, Word (.docx) o texto (.txt). <strong>Puedes agregar varios
+        archivos, incluso de carpetas distintas</strong> (por ejemplo, la antología y un examen
+        de práctica): se van sumando a la lista. La IA combinará todo e imitará el estilo de las
+        preguntas de ejemplo si las incluyes.</p>
       <div class="upload-controls">
-        <input type="file" id="file-input" accept=".pdf,.docx,.txt" multiple />
+        <input type="file" id="file-input" accept=".pdf,.docx,.txt" multiple hidden />
+        <button id="btn-agregar" class="btn" type="button">➕ Agregar archivo(s)</button>
         <button id="btn-generar" class="btn btn-primary">✨ Generar</button>
       </div>
+      <ul id="file-list" class="file-list"></ul>
       <p id="file-status" class="file-status"></p>
     </section>
 
