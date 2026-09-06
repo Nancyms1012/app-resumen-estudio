@@ -49,15 +49,17 @@ body {
   margin-bottom: 1rem;
   flex-wrap: wrap;
 }
-.tema-bar label { font-weight: 600; }
+.tema-bar label { font-weight: 600; white-space: nowrap; }
 .tema-bar select {
   flex: 1;
-  min-width: 200px;
+  min-width: 160px;
   padding: 0.5rem;
   border: 1px solid var(--gris-borde);
   border-radius: 8px;
   font-size: 0.9rem;
+  background: #fff;
 }
+.tema-bar select:disabled { opacity: 0.55; cursor: not-allowed; }
 .badge {
   background: #fef3c7;
   color: #92400e;

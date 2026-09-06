@@ -3,20 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Asistente de Estudio · Estudios Sociales 9°</title>
+  <title>Asistente de Estudio</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <header class="app-header">
     <div class="header-inner">
       <h1>📚 Asistente de Estudio</h1>
-      <p class="subtitle">Estudios Sociales · Noveno año · CONED / MEP</p>
+      <p class="subtitle">Noveno año · CONED / MEP</p>
     </div>
   </header>
 
   <main class="container">
-    <!-- Selector de tema -->
+    <!-- Selectores de materia y tema -->
     <section class="tema-bar">
+      <label for="materia-select">Materia:</label>
+      <select id="materia-select">
+        <option value="sociales" selected>Estudios Sociales</option>
+        <option value="espanol">Español</option>
+        <option value="matematicas">Matemáticas</option>
+        <option value="ciencias">Ciencias</option>
+        <option value="civica">Cívica</option>
+      </select>
+
       <label for="tema-select">Tema:</label>
       <select id="tema-select">
         <option value="t1" selected>Unidad 1 · Tema 1 — Las sociedades medievales (siglos VI-XV)</option>

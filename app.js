@@ -161,3 +161,55 @@ document.getElementById("quiz-check").addEventListener("click", () => {
 document.getElementById("quiz-reset").addEventListener("click", renderQuiz);
 
 renderQuiz();
+
+
+// ===== Selector de materia =====
+// Por ahora solo "Estudios Sociales" (sociales) tiene contenido en la demo.
+// Las demás muestran un aviso de "Contenido próximamente".
+const MATERIAS_CON_CONTENIDO = ["sociales"];
+
+const materiaSelect = document.getElementById("materia-select");
+const temaSelect = document.getElementById("tema-select");
+const tabsNav = document.querySelector(".tabs");
+const mainContainer = document.querySelector(".container");
+
+// Aviso reutilizable de "próximamente"
+const aviso = document.createElement("div");
+aviso.id = "aviso-materia";
+aviso.className = "panel active";
+aviso.style.textAlign = "center";
+aviso.hidden = true;
+aviso.innerHTML =
+  '<h2>🚧 Contenido próximamente</h2>' +
+  '<p>Esta materia todavía no tiene material cargado en la demo.</p>' +
+  '<p class="hint">Cuando conectemos la generación con IA, bastará con subir un ' +
+  'archivo para que la app cree aquí el resumen, los puntos clave, las flashcards ' +
+  'y las preguntas. ✨</p>';
+mainContainer.appendChild(aviso);
+
+function aplicarMateria() {
+  const materia = materiaSelect.value;
+  const tieneContenido = MATERIAS_CON_CONTENIDO.includes(materia);
+
+  if (tieneContenido) {
+    // Muestra los tabs y paneles normales; oculta el aviso
+    tabsNav.style.display = "";
+    aviso.hidden = true;
+    temaSelect.disabled = false;
+    // Reactiva el tab que esté marcado como activo
+    const activo = document.querySelector(".tab.active");
+    panels.forEach(p => p.classList.remove("active"));
+    if (activo) {
+      document.getElementById("panel-" + activo.dataset.tab).classList.add("active");
+    }
+  } else {
+    // Oculta tabs y todos los paneles; muestra el aviso
+    tabsNav.style.display = "none";
+    panels.forEach(p => p.classList.remove("active"));
+    aviso.hidden = false;
+    temaSelect.disabled = true;
+  }
+}
+
+materiaSelect.addEventListener("change", aplicarMateria);
+aplicarMateria();
