@@ -240,3 +240,61 @@ body {
   .tab { min-width: calc(50% - 0.2rem); }
   .flashcard { height: 200px; }
 }
+
+
+/* ===== Zona de subir archivo ===== */
+.upload-box {
+  background: var(--gris-card);
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+.upload-title { font-weight: 700; font-size: 1.05rem; margin-bottom: 0.35rem; }
+.upload-controls {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 0.8rem;
+}
+.upload-controls input[type="file"] {
+  font-size: 0.9rem;
+  max-width: 100%;
+}
+.file-status {
+  margin-top: 0.7rem;
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+  font-weight: 600;
+}
+
+/* ===== Estado de carga (spinner) ===== */
+.loading {
+  text-align: center;
+  padding: 2rem 1rem;
+}
+.spinner {
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 0.9rem;
+  border: 5px solid #dbeafe;
+  border-top-color: var(--azul);
+  border-radius: 50%;
+  animation: girar 0.8s linear infinite;
+}
+@keyframes girar { to { transform: rotate(360deg); } }
+.loading p { color: var(--texto-suave); font-weight: 600; }
+
+/* ===== Caja de error ===== */
+.error-box {
+  background: #fee2e2;
+  border: 1px solid var(--rojo);
+  color: #991b1b;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}

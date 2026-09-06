@@ -1,0 +1,8 @@
+# Archivos de texto extraídos temporalmente durante el desarrollo
+texto_extraido.txt
+examen_extraido.txt
+
+# Dependencias / entorno (por si se usa wrangler local en el futuro)
+node_modules/
+.wrangler/
+.dev.vars

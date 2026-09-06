@@ -1,63 +1,49 @@
-// ===== Datos del Tema 1 (demo) =====
+// ===== Asistente de Estudio (Opción A: con IA) =====
 
-const FLASHCARDS = [
-  { q: "¿En qué año y con quién inicia el Imperio Romano?", a: "29 a.C., con Augusto (Octavio)." },
-  { q: "¿En qué año cae el Imperio Romano de Occidente?", a: "476 d.C." },
-  { q: "¿Quién fue el último emperador de Occidente?", a: "Rómulo Augústulo." },
-  { q: "¿Qué jefe bárbaro lo depuso?", a: "Odoacro, jefe de los Hérulos." },
-  { q: "¿Quién dividió el Imperio en 395 d.C. y entre quiénes?", a: "Teodosio, entre sus hijos Arcadio (Oriente) y Honorio (Occidente)." },
-  { q: "¿Cuál era la capital del Imperio de Oriente?", a: "Constantinopla." },
-  { q: "Menciona 3 causas internas de la caída.", a: "Corrupción, guerras civiles y ambición de los generales (también la persecución de cristianos)." },
-  { q: "¿Quién fue Atila y dónde fue vencido?", a: "Rey de los Hunos (\"Azote de Dios\"), vencido en los Campos Cataláunicos." },
-  { q: "¿Quién reunificó y expandió el Imperio Carolingio?", a: "Carlomagno." },
-  { q: "¿En qué año cae Constantinopla y ante quién?", a: "En 1453, ante los turcos otomanos." },
-  { q: "¿Qué es un vasallo?", a: "Hombre libre que debe obediencia y servicio militar a un señor más poderoso." },
-  { q: "¿Qué es un feudo?", a: "La concesión de tierras que el señor da al vasallo para su sustento." },
-  { q: "¿Qué significa que la sociedad feudal era \"teocéntrica\"?", a: "Que el pensamiento y las acciones giraban en torno a Dios." },
-  { q: "¿Cuál fue la única institución estable tras la caída de Roma?", a: "La Iglesia Católica." },
-  { q: "¿Cómo se llama hoy Constantinopla?", a: "Estambul." }
-];
+// pdf.js necesita saber dónde está su "worker"
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
 
-const PREGUNTAS = [
-  {
-    texto: "El Imperio Romano de Occidente cayó en el año:",
-    opciones: ["395 d.C.", "476 d.C.", "1453 d.C."],
-    correcta: 1
-  },
-  {
-    texto: "La ruptura religiosa entre Oriente y Occidente en 1054 se conoce por conflictos como:",
-    opciones: ["Las Cruzadas", "Los iconoclastas y el arrianismo", "La Reforma Protestante"],
-    correcta: 1
-  },
-  {
-    texto: "En el feudalismo, la concesión de tierras que recibía el vasallo se llamaba:",
-    opciones: ["Señorío", "Vasallaje", "Feudo"],
-    correcta: 2
-  },
-  {
-    texto: "¿Cuál fue una causa del surgimiento del feudalismo en Europa?",
-    opciones: [
-      "El sometimiento absoluto de los nobles hacia los reyes.",
-      "La migración de la población de las ciudades al campo para una economía de autoconsumo.",
-      "El fortalecimiento del comercio marítimo internacional."
-    ],
-    correcta: 1
-  },
-  {
-    texto: "¿Qué acontecimiento puso fin al Imperio Romano de Oriente en 1453?",
-    opciones: [
-      "La toma de Constantinopla por los turcos otomanos.",
-      "La invasión de los visigodos a Toledo.",
-      "La coronación de Carlomagno."
-    ],
-    correcta: 0
-  }
-];
+const STORAGE_KEY = "asistenteEstudio_v1";
 
-// ===== Navegación de tabs =====
+// ----- Elementos del DOM -----
+const materiaSelect = document.getElementById("materia-select");
+const fileInput = document.getElementById("file-input");
+const btnGenerar = document.getElementById("btn-generar");
+const fileStatus = document.getElementById("file-status");
+const loading = document.getElementById("loading");
+const loadingText = document.getElementById("loading-text");
+const errorBox = document.getElementById("error-box");
+const contenido = document.getElementById("contenido");
+
 const tabs = document.querySelectorAll(".tab");
 const panels = document.querySelectorAll(".panel");
 
+const resumenCont = document.getElementById("resumen-cont");
+const puntosCont = document.getElementById("puntos-cont");
+
+// Flashcards
+const fcEl = document.getElementById("flashcard");
+const fcFront = document.getElementById("fc-front");
+const fcBack = document.getElementById("fc-back");
+const fcCounter = document.getElementById("fc-counter");
+
+// Quiz
+const quizForm = document.getElementById("quiz-form");
+const quizResult = document.getElementById("quiz-result");
+const quizCheck = document.getElementById("quiz-check");
+const quizReset = document.getElementById("quiz-reset");
+
+// Estado en memoria
+let FLASHCARDS = [];
+let PREGUNTAS = [];
+let fcIndex = 0;
+
+// ===================================================================
+//  Navegación de tabs
+// ===================================================================
 tabs.forEach(tab => {
   tab.addEventListener("click", () => {
     tabs.forEach(t => t.classList.remove("active"));
@@ -67,40 +53,200 @@ tabs.forEach(tab => {
   });
 });
 
-// ===== Flashcards =====
-let fcIndex = 0;
-const fcEl = document.getElementById("flashcard");
-const fcFront = document.getElementById("fc-front");
-const fcBack = document.getElementById("fc-back");
-const fcCounter = document.getElementById("fc-counter");
+// ===================================================================
+//  Utilidades de UI
+// ===================================================================
+function mostrarError(msg) {
+  errorBox.hidden = false;
+  errorBox.textContent = "⚠️ " + msg;
+}
+function limpiarError() {
+  errorBox.hidden = true;
+  errorBox.textContent = "";
+}
+function mostrarCarga(texto) {
+  loading.hidden = false;
+  loadingText.textContent = texto || "Procesando…";
+}
+function ocultarCarga() {
+  loading.hidden = true;
+}
 
+// ===================================================================
+//  Extracción de texto según el tipo de archivo
+// ===================================================================
+async function extraerTexto(file) {
+  const nombre = file.name.toLowerCase();
+
+  if (nombre.endsWith(".txt")) {
+    return await file.text();
+  }
+
+  if (nombre.endsWith(".pdf")) {
+    if (!window.pdfjsLib) throw new Error("No se pudo cargar el lector de PDF.");
+    const buffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let texto = "";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      texto += content.items.map(it => it.str).join(" ") + "\n";
+    }
+    return texto;
+  }
+
+  if (nombre.endsWith(".docx")) {
+    if (!window.mammoth) throw new Error("No se pudo cargar el lector de Word.");
+    const buffer = await file.arrayBuffer();
+    const res = await mammoth.extractRawText({ arrayBuffer: buffer });
+    return res.value;
+  }
+
+  throw new Error("Formato no soportado. Usa PDF, Word (.docx) o texto (.txt).");
+}
+
+// ===================================================================
+//  Llamada a la Function que usa Gemini
+// ===================================================================
+async function generarConIA(texto, materia) {
+  const resp = await fetch("/api/generar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ texto, materia })
+  });
+
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    throw new Error(data.error || "Error al generar el contenido.");
+  }
+  return data;
+}
+
+// ===================================================================
+//  Botón Generar
+// ===================================================================
+btnGenerar.addEventListener("click", async () => {
+  limpiarError();
+  const file = fileInput.files[0];
+  if (!file) {
+    mostrarError("Primero selecciona un archivo (PDF, Word o texto).");
+    return;
+  }
+
+  const materiaValor = materiaSelect.value;
+  const materiaTexto = materiaSelect.options[materiaSelect.selectedIndex].text;
+
+  try {
+    btnGenerar.disabled = true;
+    contenido.style.display = "none";
+    mostrarCarga("📖 Leyendo el archivo…");
+    const texto = await extraerTexto(file);
+
+    if (!texto || texto.trim().length < 30) {
+      throw new Error("No se pudo extraer texto del archivo (¿es un PDF escaneado como imagen?).");
+    }
+
+    mostrarCarga("🤖 Generando resumen, flashcards y preguntas con IA…");
+    const resultado = await generarConIA(texto, materiaTexto);
+
+    aplicarResultado(resultado);
+    guardar(materiaValor, file.name, resultado);
+    fileStatus.textContent = "✅ Generado a partir de: " + file.name;
+    ocultarCarga();
+    contenido.style.display = "";
+  } catch (e) {
+    ocultarCarga();
+    mostrarError(e.message);
+  } finally {
+    btnGenerar.disabled = false;
+  }
+});
+
+// ===================================================================
+//  Aplicar y renderizar el resultado en los tabs
+// ===================================================================
+function aplicarResultado(r) {
+  // Resumen
+  const parrafos = (r.resumen || "").split(/\n{2,}|\n/).filter(p => p.trim());
+  resumenCont.innerHTML = parrafos.length
+    ? parrafos.map(p => "<p>" + escapar(p) + "</p>").join("")
+    : "<p>Sin resumen.</p>";
+
+  // Puntos clave
+  puntosCont.innerHTML = "";
+  (r.puntos || []).forEach(bloque => {
+    const div = document.createElement("div");
+    div.className = "card";
+    const items = (bloque.items || []).map(it => "<li>" + escapar(it) + "</li>").join("");
+    div.innerHTML = "<h3>" + escapar(bloque.titulo || "") + "</h3><ul>" + items + "</ul>";
+    puntosCont.appendChild(div);
+  });
+
+  // Flashcards
+  FLASHCARDS = (r.flashcards || []).filter(f => f && f.q && f.a);
+  fcIndex = 0;
+  renderFlashcard();
+
+  // Preguntas
+  PREGUNTAS = (r.preguntas || []).filter(p =>
+    p && p.texto && Array.isArray(p.opciones) && p.opciones.length >= 2);
+  renderQuiz();
+
+  // Volver al primer tab
+  tabs.forEach(t => t.classList.remove("active"));
+  panels.forEach(p => p.classList.remove("active"));
+  tabs[0].classList.add("active");
+  document.getElementById("panel-resumen").classList.add("active");
+}
+
+function escapar(s) {
+  const d = document.createElement("div");
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
+// ===================================================================
+//  Flashcards
+// ===================================================================
 function renderFlashcard() {
   fcEl.classList.remove("flipped");
+  if (FLASHCARDS.length === 0) {
+    fcFront.textContent = "Aún no hay flashcards.";
+    fcBack.textContent = "";
+    fcCounter.textContent = "0 / 0";
+    return;
+  }
   fcFront.textContent = FLASHCARDS[fcIndex].q;
   fcBack.textContent = FLASHCARDS[fcIndex].a;
   fcCounter.textContent = (fcIndex + 1) + " / " + FLASHCARDS.length;
 }
 
-fcEl.addEventListener("click", () => fcEl.classList.toggle("flipped"));
-
+fcEl.addEventListener("click", () => {
+  if (FLASHCARDS.length) fcEl.classList.toggle("flipped");
+});
 document.getElementById("fc-next").addEventListener("click", () => {
+  if (!FLASHCARDS.length) return;
   fcIndex = (fcIndex + 1) % FLASHCARDS.length;
   renderFlashcard();
 });
 document.getElementById("fc-prev").addEventListener("click", () => {
+  if (!FLASHCARDS.length) return;
   fcIndex = (fcIndex - 1 + FLASHCARDS.length) % FLASHCARDS.length;
   renderFlashcard();
 });
 
-renderFlashcard();
-
-// ===== Quiz =====
-const quizForm = document.getElementById("quiz-form");
-const quizResult = document.getElementById("quiz-result");
-
+// ===================================================================
+//  Quiz
+// ===================================================================
 function renderQuiz() {
   quizForm.innerHTML = "";
   quizResult.hidden = true;
+
+  if (PREGUNTAS.length === 0) {
+    quizForm.innerHTML = "<p class='hint'>Aún no hay preguntas.</p>";
+    return;
+  }
+
   PREGUNTAS.forEach((p, i) => {
     const div = document.createElement("div");
     div.className = "pregunta";
@@ -114,9 +260,9 @@ function renderQuiz() {
     p.opciones.forEach((op, j) => {
       const label = document.createElement("label");
       label.className = "opcion";
-      const letra = String.fromCharCode(65 + j); // A, B, C
+      const letra = String.fromCharCode(65 + j);
       label.innerHTML = '<input type="radio" name="p' + i + '" value="' + j + '"> ' +
-        "<strong>" + letra + ")</strong> " + op;
+        "<strong>" + letra + ")</strong> " + escapar(op);
       div.appendChild(label);
     });
 
@@ -124,7 +270,8 @@ function renderQuiz() {
   });
 }
 
-document.getElementById("quiz-check").addEventListener("click", () => {
+quizCheck.addEventListener("click", () => {
+  if (!PREGUNTAS.length) return;
   let correctas = 0;
   let contestadas = 0;
 
@@ -134,82 +281,70 @@ document.getElementById("quiz-check").addEventListener("click", () => {
     opciones.forEach(o => o.classList.remove("correcta", "incorrecta"));
 
     const seleccion = quizForm.querySelector('input[name="p' + i + '"]:checked');
+    const correcta = typeof p.correcta === "number" ? p.correcta : 0;
 
-    // Marca siempre la correcta en verde
-    opciones[p.correcta].classList.add("correcta");
+    if (opciones[correcta]) opciones[correcta].classList.add("correcta");
 
     if (seleccion) {
       contestadas++;
       const elegida = parseInt(seleccion.value, 10);
-      if (elegida === p.correcta) {
-        correctas++;
-      } else {
-        opciones[elegida].classList.add("incorrecta");
-      }
+      if (elegida === correcta) correctas++;
+      else if (opciones[elegida]) opciones[elegida].classList.add("incorrecta");
     }
   });
 
   const total = PREGUNTAS.length;
   const nota = Math.round((correctas / total) * 100);
-  let emoji = nota >= 70 ? "🎉" : (nota >= 50 ? "💪" : "📚");
+  const emoji = nota >= 70 ? "🎉" : (nota >= 50 ? "💪" : "📚");
   quizResult.hidden = false;
   quizResult.textContent = emoji + " Obtuviste " + correctas + " de " + total +
     " correctas (" + nota + "%). " +
     (contestadas < total ? "Dejaste " + (total - contestadas) + " sin responder." : "");
 });
 
-document.getElementById("quiz-reset").addEventListener("click", renderQuiz);
+quizReset.addEventListener("click", renderQuiz);
 
-renderQuiz();
-
-
-// ===== Selector de materia =====
-// Por ahora solo "Estudios Sociales" (sociales) tiene contenido en la demo.
-// Las demás muestran un aviso de "Contenido próximamente".
-const MATERIAS_CON_CONTENIDO = ["sociales"];
-
-const materiaSelect = document.getElementById("materia-select");
-const temaSelect = document.getElementById("tema-select");
-const tabsNav = document.querySelector(".tabs");
-const mainContainer = document.querySelector(".container");
-
-// Aviso reutilizable de "próximamente"
-const aviso = document.createElement("div");
-aviso.id = "aviso-materia";
-aviso.className = "panel active";
-aviso.style.textAlign = "center";
-aviso.hidden = true;
-aviso.innerHTML =
-  '<h2>🚧 Contenido próximamente</h2>' +
-  '<p>Esta materia todavía no tiene material cargado en la demo.</p>' +
-  '<p class="hint">Cuando conectemos la generación con IA, bastará con subir un ' +
-  'archivo para que la app cree aquí el resumen, los puntos clave, las flashcards ' +
-  'y las preguntas. ✨</p>';
-mainContainer.appendChild(aviso);
-
-function aplicarMateria() {
-  const materia = materiaSelect.value;
-  const tieneContenido = MATERIAS_CON_CONTENIDO.includes(materia);
-
-  if (tieneContenido) {
-    // Muestra los tabs y paneles normales; oculta el aviso
-    tabsNav.style.display = "";
-    aviso.hidden = true;
-    temaSelect.disabled = false;
-    // Reactiva el tab que esté marcado como activo
-    const activo = document.querySelector(".tab.active");
-    panels.forEach(p => p.classList.remove("active"));
-    if (activo) {
-      document.getElementById("panel-" + activo.dataset.tab).classList.add("active");
-    }
-  } else {
-    // Oculta tabs y todos los paneles; muestra el aviso
-    tabsNav.style.display = "none";
-    panels.forEach(p => p.classList.remove("active"));
-    aviso.hidden = false;
-    temaSelect.disabled = true;
-  }
+// ===================================================================
+//  Guardado en localStorage (por materia)
+// ===================================================================
+function guardar(materia, nombreArchivo, resultado) {
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { store = {}; }
+  store[materia] = { nombreArchivo, resultado, fecha: new Date().toISOString() };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch { /* cuota llena, ignorar */ }
 }
 
-materiaSelect.addEventListener("change", aplicarMateria);
-aplicarMateria();
+function cargarGuardado(materia) {
+  let store = {};
+  try { store = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { store = {}; }
+  return store[materia] || null;
+}
+
+// Al cambiar de materia, si hay algo guardado lo mostramos; si no, limpiamos.
+materiaSelect.addEventListener("change", () => {
+  limpiarError();
+  const guardado = cargarGuardado(materiaSelect.value);
+  if (guardado) {
+    aplicarResultado(guardado.resultado);
+    fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
+    contenido.style.display = "";
+  } else {
+    fileStatus.textContent = "";
+    contenido.style.display = "none";
+  }
+  fileInput.value = "";
+});
+
+// ===================================================================
+//  Inicio: cargar lo guardado de la materia inicial (si existe)
+// ===================================================================
+(function init() {
+  const guardado = cargarGuardado(materiaSelect.value);
+  if (guardado) {
+    aplicarResultado(guardado.resultado);
+    fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
+    contenido.style.display = "";
+  } else {
+    contenido.style.display = "none";
+  }
+})();
