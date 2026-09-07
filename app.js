@@ -207,7 +207,21 @@ btnGenerar.addEventListener("click", async () => {
 
     aplicarResultado(resultado);
     guardar(materiaValor, nombres, resultado);
-    fileStatus.textContent = "✅ Generado a partir de: " + nombres;
+
+    let estado = "✅ Generado a partir de: " + nombres;
+    if (resultado.meta) {
+      const m = resultado.meta;
+      const procesados = (m.caracteresProcesados || 0).toLocaleString("es-CR");
+      const total = (m.totalCaracteres || 0).toLocaleString("es-CR");
+      if (m.recortado) {
+        estado += " · ⚠️ El texto era muy largo: se procesaron " + procesados +
+          " de " + total + " caracteres.";
+      } else {
+        estado += " · Se procesó el documento completo (" + total + " caracteres).";
+      }
+    }
+    fileStatus.textContent = estado;
+
     ocultarCarga();
     contenido.style.display = "";
   } catch (e) {

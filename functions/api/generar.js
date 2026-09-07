@@ -11,9 +11,11 @@ const MODELOS = [
   "models/gemini-2.5-pro"
 ];
 
-// Límite de caracteres del texto que enviamos al modelo (evita costos/errores por textos enormes).
-// Se subió para permitir combinar varios documentos (p. ej. antología + examen de práctica).
-const MAX_CHARS = 200000;
+// Límite de caracteres del texto que enviamos al modelo.
+// Gemini flash admite una ventana de contexto muy grande (~1M tokens), así que subimos
+// bastante el límite para que quepan documentos largos completos (p. ej. una antología de
+// ~416.000 caracteres) combinados con un examen de práctica.
+const MAX_CHARS = 900000;
 
 export async function onRequestPost(context) {
   const { request, env } = context;
@@ -36,8 +38,13 @@ export async function onRequestPost(context) {
   if (!texto) {
     return json({ error: "No se recibió texto para procesar." }, 400);
   }
+
+  // Registramos cuánto texto recibimos y si hubo que recortarlo, para informar al usuario.
+  const totalCaracteres = texto.length;
+  let recortado = false;
   if (texto.length > MAX_CHARS) {
     texto = texto.slice(0, MAX_CHARS);
+    recortado = true;
   }
 
   const prompt = construirPrompt(texto, materia);
@@ -120,6 +127,13 @@ export async function onRequestPost(context) {
     salida.preguntasNuevas = salida._preguntasLegacy;
   }
   delete salida._preguntasLegacy;
+
+  // Info para que la app pueda avisar cuánto texto se procesó y si se recortó.
+  salida.meta = {
+    totalCaracteres: totalCaracteres,
+    caracteresProcesados: recortado ? MAX_CHARS : totalCaracteres,
+    recortado: recortado
+  };
 
   return json(salida, 200);
 }
