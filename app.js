@@ -236,11 +236,21 @@ btnGenerar.addEventListener("click", async () => {
 //  Aplicar y renderizar el resultado en los tabs
 // ===================================================================
 function aplicarResultado(r) {
-  // Resumen
-  const parrafos = (r.resumen || "").split(/\n{2,}|\n/).filter(p => p.trim());
-  resumenCont.innerHTML = parrafos.length
-    ? parrafos.map(p => "<p>" + escapar(p) + "</p>").join("")
-    : "<p>Sin resumen.</p>";
+  // Resumen: cada bloque separado por saltos de línea. Si una línea parece un
+  // subtítulo (corta y en MAYÚSCULAS, o termina en ':'), la mostramos como encabezado.
+  const bloques = (r.resumen || "").split(/\n{2,}|\n/).map(p => p.trim()).filter(Boolean);
+  if (bloques.length) {
+    resumenCont.innerHTML = bloques.map(b => {
+      const esSubtitulo =
+        (b.length < 90 && (b === b.toUpperCase()) && /[A-ZÁÉÍÓÚÑ]/.test(b)) ||
+        (b.length < 70 && b.endsWith(":"));
+      return esSubtitulo
+        ? "<h3 class='resumen-sub'>" + escapar(b.replace(/:$/, "")) + "</h3>"
+        : "<p>" + escapar(b) + "</p>";
+    }).join("");
+  } else {
+    resumenCont.innerHTML = "<p>Sin resumen.</p>";
+  }
 
   // Puntos clave
   puntosCont.innerHTML = "";

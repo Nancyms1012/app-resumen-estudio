@@ -344,3 +344,12 @@ body {
   flex-shrink: 0;
 }
 .file-remove:hover { background: #fecaca; }
+
+
+/* ===== Subtítulos dentro del resumen ===== */
+.resumen-sub {
+  color: var(--azul-osc);
+  margin: 1.1rem 0 0.4rem;
+  font-size: 1.05rem;
+}
+.resumen-sub:first-child { margin-top: 0; }
