@@ -3,12 +3,12 @@
 // generados por Gemini. La API key vive como secreto GEMINI_API_KEY (nunca en el frontend).
 
 // Modelos a intentar, en orden. Se usan con el prefijo "models/" (nombre completo
-// que devuelve la API). Si uno da error (p. ej. 404 por modelo retirado), se prueba el siguiente.
+// que devuelve la API). Si uno da error, se prueba el siguiente.
+// Solo modelos vigentes (según el diagnóstico /api/diag de la key de Nancy).
 const MODELOS = [
   "models/gemini-flash-latest",
   "models/gemini-2.5-flash",
-  "models/gemini-3.5-flash",
-  "models/gemini-2.5-pro"
+  "models/gemini-3.5-flash"
 ];
 
 // Límite de caracteres del texto que enviamos al modelo.
@@ -59,7 +59,7 @@ export async function onRequestPost(context) {
 
   // Intenta cada modelo en orden; usa el primero que responda bien.
   let geminiResp = null;
-  let ultimoDetalle = "";
+  const detalles = [];
   for (const modelo of MODELOS) {
     const url = "https://generativelanguage.googleapis.com/v1beta/" +
       modelo + ":generateContent?key=" + encodeURIComponent(apiKey);
@@ -73,15 +73,15 @@ export async function onRequestPost(context) {
         geminiResp = r;
         break;
       }
-      ultimoDetalle = "Modelo " + modelo + " → HTTP " + r.status + ": " +
-        (await r.text()).slice(0, 300);
+      detalles.push(modelo.replace("models/", "") + " → HTTP " + r.status + ": " +
+        (await r.text()).slice(0, 200));
     } catch (e) {
-      ultimoDetalle = "Modelo " + modelo + " → " + e.message;
+      detalles.push(modelo.replace("models/", "") + " → " + e.message);
     }
   }
 
   if (!geminiResp) {
-    return json({ error: "Gemini respondió con error.", detalle: ultimoDetalle }, 502);
+    return json({ error: "Gemini respondió con error.", detalle: detalles.join(" || ") }, 502);
   }
 
   const data = await geminiResp.json();
