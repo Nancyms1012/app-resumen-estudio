@@ -220,6 +220,9 @@ btnGenerar.addEventListener("click", async () => {
         estado += " · Se procesó el documento completo (" + total + " caracteres).";
       }
     }
+    const nExamen = (resultado.preguntasExamen || []).length;
+    const nNuevas = (resultado.preguntasNuevas || []).length;
+    estado += " · Preguntas: " + nExamen + " del examen + " + nNuevas + " nuevas.";
     fileStatus.textContent = estado;
 
     ocultarCarga();

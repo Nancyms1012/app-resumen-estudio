@@ -53,7 +53,10 @@ export async function onRequestPost(context) {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.4,
-      responseMimeType: "application/json"
+      responseMimeType: "application/json",
+      // Subimos el límite de salida para que quepan TODAS las preguntas del examen
+      // (p. ej. 55) + las nuevas + resumen extenso + puntos + flashcards.
+      maxOutputTokens: 32000
     }
   };
 
@@ -169,10 +172,15 @@ function construirPrompt(texto, materia) {
     "- El material puede incluir VARIOS documentos (marcados con '===== DOCUMENTO: ... =====').",
     "",
     "Sobre las DOS listas de preguntas:",
-    "- 'preguntasExamen': si en el material hay un EXAMEN o PRÁCTICA con preguntas, COPIA esas",
-    "  preguntas TAL CUAL (mismo enunciado y mismas opciones). Determina la opción 'correcta'",
-    "  usando la información del material (muchos exámenes incluyen sus respuestas). Si no hay",
-    "  ningún examen con preguntas en el material, deja 'preguntasExamen' como lista vacía [].",
+    "- 'preguntasExamen': si en el material hay un EXAMEN o PRÁCTICA con preguntas, debes COPIAR",
+    "  ABSOLUTAMENTE TODAS Y CADA UNA de esas preguntas, SIN OMITIR NINGUNA y SIN RESUMIR.",
+    "  Recorre el examen de la primera a la última pregunta (por ejemplo, si el examen tiene 55",
+    "  preguntas numeradas del 1 al 55, tu lista 'preguntasExamen' debe tener las 55 completas).",
+    "  Copia cada una TAL CUAL (mismo enunciado y mismas opciones, en el mismo orden).",
+    "  NO tomes solo una muestra ni selecciones algunas: son TODAS obligatoriamente.",
+    "  Determina la opción 'correcta' usando la información del material (muchos exámenes incluyen",
+    "  sus respuestas). Si no hay ningún examen con preguntas en el material, deja 'preguntasExamen'",
+    "  como lista vacía [].",
     "- 'preguntasNuevas': crea entre 15 y 20 preguntas NUEVAS de selección única con exactamente",
     "  3 opciones. Deben IMITAR el estilo, formato y dificultad de las del examen (enunciado con",
     "  texto/esquema para leer y opciones A/B/C tipo MEP), pero SIN repetir las de 'preguntasExamen'.",
