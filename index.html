@@ -41,6 +41,19 @@
       <ul id="file-list" class="file-list"></ul>
       <p id="file-status" class="file-status"></p>
 
+      <!-- Guardar en la nube (solo para quien edita: requiere clave) -->
+      <details class="nube-box">
+        <summary>☁️ Guardar en la nube (para que el estudiante lo vea desde cualquier lugar)</summary>
+        <p class="hint">Después de generar, guarda el contenido en la nube con tu clave. Así el
+          estudiante solo entra a la página, elige la materia y ve todo sin generar nada.</p>
+        <div class="nube-controls">
+          <input type="password" id="clave-edicion" class="clave-input"
+            placeholder="Tu clave de edición" autocomplete="off" />
+          <button id="btn-guardar-nube" class="btn btn-primary" type="button">☁️ Guardar en la nube</button>
+        </div>
+        <p id="nube-status" class="nube-status"></p>
+      </details>
+
       <!-- Tabla de contenidos (temario) opcional -->
       <details class="temario-box">
         <summary>📋 ¿Quieres comparar con una tabla de contenidos? (opcional)</summary>

@@ -34,6 +34,15 @@ const tabCobertura = document.getElementById("tab-cobertura");
 const coberturaResumen = document.getElementById("cobertura-resumen");
 const coberturaCont = document.getElementById("cobertura-cont");
 
+// Nube (guardar/leer)
+const claveEdicion = document.getElementById("clave-edicion");
+const btnGuardarNube = document.getElementById("btn-guardar-nube");
+const nubeStatus = document.getElementById("nube-status");
+
+// Último resultado generado/cargado (para poder guardarlo en la nube)
+let ultimoResultado = null;
+let ultimoNombreArchivo = "";
+
 // Flashcards
 const fcEl = document.getElementById("flashcard");
 const fcFront = document.getElementById("fc-front");
@@ -231,6 +240,8 @@ btnGenerar.addEventListener("click", async () => {
 
     aplicarResultado(resultado);
     guardar(materiaValor, nombres, resultado);
+    ultimoResultado = resultado;
+    ultimoNombreArchivo = nombres;
 
     let estado = "✅ Generado a partir de: " + nombres;
     if (resultado.meta) {
@@ -488,7 +499,78 @@ quizCheck.addEventListener("click", () => {
 quizReset.addEventListener("click", renderQuiz);
 
 // ===================================================================
-//  Guardado en localStorage (por materia)
+//  Nube: guardar (con clave) y leer (abierto)
+// ===================================================================
+btnGuardarNube.addEventListener("click", async () => {
+  nubeStatus.textContent = "";
+  nubeStatus.className = "nube-status";
+
+  if (!ultimoResultado) {
+    nubeStatus.textContent = "⚠️ Primero genera el contenido y luego guárdalo en la nube.";
+    nubeStatus.classList.add("nube-error");
+    return;
+  }
+  const clave = (claveEdicion.value || "").trim();
+  if (!clave) {
+    nubeStatus.textContent = "⚠️ Escribe tu clave de edición para guardar.";
+    nubeStatus.classList.add("nube-error");
+    return;
+  }
+
+  try {
+    btnGuardarNube.disabled = true;
+    nubeStatus.textContent = "☁️ Guardando en la nube…";
+    const resp = await fetch("/api/contenido", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        clave: clave,
+        materia: materiaSelect.value,
+        resultado: ultimoResultado,
+        temario: (temarioInput.value || "").trim(),
+        nombreArchivo: ultimoNombreArchivo
+      })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) {
+      throw new Error(data.error || "No se pudo guardar en la nube.");
+    }
+    nubeStatus.textContent = "✅ Guardado en la nube. El estudiante ya puede verlo al entrar y elegir esta materia.";
+    nubeStatus.classList.add("nube-ok");
+  } catch (e) {
+    nubeStatus.textContent = "⚠️ " + e.message;
+    nubeStatus.classList.add("nube-error");
+  } finally {
+    btnGuardarNube.disabled = false;
+  }
+});
+
+// Intenta cargar el contenido de una materia desde la nube. Devuelve el registro o null.
+async function cargarDeNube(materia) {
+  try {
+    const resp = await fetch("/api/contenido?materia=" + encodeURIComponent(materia));
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data && data.existe && data.resultado) {
+      return { resultado: data.resultado, temario: data.temario || "", nombreArchivo: data.nombreArchivo || "" };
+    }
+  } catch { /* sin conexión o error: usaremos localStorage */ }
+  return null;
+}
+
+// Muestra un registro (venga de la nube o de localStorage) en la interfaz.
+function mostrarRegistro(reg, origen) {
+  aplicarResultado(reg.resultado);
+  ultimoResultado = reg.resultado;
+  ultimoNombreArchivo = reg.nombreArchivo || "";
+  temarioInput.value = reg.temario || "";
+  const etiqueta = origen === "nube" ? "☁️ Desde la nube" : "📁 Guardado";
+  fileStatus.textContent = etiqueta + (reg.nombreArchivo ? ": " + reg.nombreArchivo : "");
+  contenido.style.display = "";
+}
+
+// ===================================================================
+//  Guardado en localStorage (por materia) — respaldo local
 // ===================================================================
 function guardar(materia, nombreArchivo, resultado) {
   let store = {};
@@ -508,36 +590,43 @@ function cargarGuardado(materia) {
   return store[materia] || null;
 }
 
-// Al cambiar de materia, si hay algo guardado lo mostramos; si no, limpiamos.
-materiaSelect.addEventListener("change", () => {
-  limpiarError();
-  const guardado = cargarGuardado(materiaSelect.value);
-  if (guardado) {
-    aplicarResultado(guardado.resultado);
-    temarioInput.value = guardado.temario || "";
-    fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
-    contenido.style.display = "";
-  } else {
-    temarioInput.value = "";
-    fileStatus.textContent = "";
-    contenido.style.display = "none";
+// Carga el contenido de una materia: primero intenta la NUBE, luego el respaldo local.
+async function cargarMateria(materia) {
+  // Reset visual mientras carga
+  ultimoResultado = null;
+  ultimoNombreArchivo = "";
+  temarioInput.value = "";
+  contenido.style.display = "none";
+  fileStatus.textContent = "☁️ Buscando contenido guardado…";
+
+  const nube = await cargarDeNube(materia);
+  if (nube) {
+    mostrarRegistro(nube, "nube");
+    return;
   }
+
+  const local = cargarGuardado(materia);
+  if (local) {
+    mostrarRegistro(local, "local");
+    return;
+  }
+
+  // Nada guardado
+  fileStatus.textContent = "";
+  contenido.style.display = "none";
+}
+
+// Al cambiar de materia.
+materiaSelect.addEventListener("change", async () => {
+  limpiarError();
+  nubeStatus.textContent = "";
   fileInput.value = "";
   archivos = [];
   renderListaArchivos();
+  await cargarMateria(materiaSelect.value);
 });
 
 // ===================================================================
-//  Inicio: cargar lo guardado de la materia inicial (si existe)
+//  Inicio: cargar la materia inicial (nube o respaldo local)
 // ===================================================================
-(function init() {
-  const guardado = cargarGuardado(materiaSelect.value);
-  if (guardado) {
-    aplicarResultado(guardado.resultado);
-    temarioInput.value = guardado.temario || "";
-    fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
-    contenido.style.display = "";
-  } else {
-    contenido.style.display = "none";
-  }
-})();
+cargarMateria(materiaSelect.value);

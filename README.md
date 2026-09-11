@@ -56,9 +56,44 @@ como el flujo aquí es por panel web, basta con desplegar y probar en la URL de 
 
 ---
 
+## ☁️ Guardar en la nube (para que el estudiante solo entre y vea)
+
+El contenido puede guardarse en **Cloudflare Workers KV**. Quien edita (mamá) usa una
+clave para guardar; el estudiante solo entra, elige materia y ve todo (sin clave).
+
+Configuración en el panel de Cloudflare (una sola vez):
+
+1. **Crear el almacén KV**
+   - Cloudflare → **Workers & Pages → KV → Create a namespace**.
+   - Nombre sugerido: `estudio-kv`. Crear.
+
+2. **Enlazar el KV al proyecto de Pages**
+   - En tu proyecto de Pages → **Settings → Functions → KV namespace bindings** (o
+     *Bindings*) → **Add binding**.
+   - **Variable name:** `ESTUDIO_KV`  ·  **KV namespace:** el que creaste (`estudio-kv`).
+   - Guardar.
+
+3. **Agregar la clave de edición (secreto)**
+   - En tu proyecto → **Settings → Variables and secrets → Add**.
+   - **Type:** Secret · **Name:** `CLAVE_EDICION` · **Value:** *(la contraseña que usará mamá)*.
+   - Guardar.
+
+4. **Volver a desplegar** (Deployments → Retry deployment) para que tome KV y el secreto.
+
+### Dominio propio (opcional): study.raceclubhub.com
+
+- En tu proyecto de Pages → **Custom domains → Set up a custom domain**.
+- Escribe `study.raceclubhub.com` y sigue los pasos (Cloudflare crea el registro DNS solo
+  porque el dominio ya está en tu cuenta).
+
+### Endpoints
+
+- `GET  /api/contenido?materia=<materia>` → lee el contenido guardado (abierto).
+- `POST /api/contenido` → guarda (requiere `clave` correcta en el cuerpo).
+
 ## Notas
 
-- Modelo usado: `gemini-2.5-flash` (rápido y económico; con capa gratuita).
+- Modelo usado: `gemini-flash-latest` (rápido y económico; con capa gratuita).
 - Si un PDF es una imagen escaneada (sin texto), la extracción fallará: en ese
   caso se necesitaría OCR (mejora futura).
 - El contenido se genera solo con base en el archivo subido.

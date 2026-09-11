@@ -416,3 +416,41 @@ body {
 .cob-icono { flex-shrink: 0; }
 .cob-tema { display: flex; flex-direction: column; }
 .cob-nota { color: var(--texto-suave); font-weight: 400; margin-top: 0.15rem; }
+
+
+/* ===== Guardar en la nube ===== */
+.nube-box {
+  margin-top: 0.8rem;
+  text-align: left;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: #f0f9ff;
+}
+.nube-box summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--azul-osc);
+}
+.nube-controls {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.6rem;
+}
+.clave-input {
+  flex: 1;
+  min-width: 180px;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+.nube-status {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.nube-status.nube-ok { color: var(--verde); }
+.nube-status.nube-error { color: var(--rojo); }
