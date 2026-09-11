@@ -26,6 +26,14 @@ const panels = document.querySelectorAll(".panel");
 const resumenCont = document.getElementById("resumen-cont");
 const puntosCont = document.getElementById("puntos-cont");
 
+// Temario / Cobertura
+const temarioInput = document.getElementById("temario-input");
+const temarioFile = document.getElementById("temario-file");
+const btnTemarioFile = document.getElementById("btn-temario-file");
+const tabCobertura = document.getElementById("tab-cobertura");
+const coberturaResumen = document.getElementById("cobertura-resumen");
+const coberturaCont = document.getElementById("cobertura-cont");
+
 // Flashcards
 const fcEl = document.getElementById("flashcard");
 const fcFront = document.getElementById("fc-front");
@@ -82,6 +90,20 @@ function renderListaArchivos() {
     fileList.appendChild(li);
   });
 }
+
+// Cargar el temario desde un archivo (se vuelca en el textarea).
+btnTemarioFile.addEventListener("click", () => temarioFile.click());
+temarioFile.addEventListener("change", async () => {
+  const f = temarioFile.files[0];
+  if (!f) return;
+  try {
+    const t = await extraerTexto(f);
+    temarioInput.value = (t || "").trim();
+  } catch (e) {
+    mostrarError("No se pudo leer el temario: " + e.message);
+  }
+  temarioFile.value = "";
+});
 
 // ===================================================================
 //  Navegación de tabs
@@ -150,11 +172,11 @@ async function extraerTexto(file) {
 // ===================================================================
 //  Llamada a la Function que usa Gemini
 // ===================================================================
-async function generarConIA(texto, materia) {
+async function generarConIA(texto, materia, temario) {
   const resp = await fetch("/api/generar", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ texto, materia })
+    body: JSON.stringify({ texto, materia, temario: temario || "" })
   });
 
   const data = await resp.json().catch(() => ({}));
@@ -202,8 +224,10 @@ btnGenerar.addEventListener("click", async () => {
     const textoCombinado = partes.join("\n\n");
     const nombres = files.map(f => f.name).join(", ");
 
+    const temario = (temarioInput.value || "").trim();
+
     mostrarCarga("🤖 Generando resumen, flashcards y preguntas con IA…");
-    const resultado = await generarConIA(textoCombinado, materiaTexto);
+    const resultado = await generarConIA(textoCombinado, materiaTexto, temario);
 
     aplicarResultado(resultado);
     guardar(materiaValor, nombres, resultado);
@@ -280,6 +304,9 @@ function aplicarResultado(r) {
   PREGUNTAS = examen.concat(nuevas);
   renderQuiz();
 
+  // Cobertura del temario (solo si hay datos)
+  renderCobertura(r.cobertura || []);
+
   // Volver al primer tab
   tabs.forEach(t => t.classList.remove("active"));
   panels.forEach(p => p.classList.remove("active"));
@@ -291,6 +318,62 @@ function escapar(s) {
   const d = document.createElement("div");
   d.textContent = String(s);
   return d.innerHTML;
+}
+
+// ===================================================================
+//  Cobertura del temario
+// ===================================================================
+function renderCobertura(lista) {
+  const items = (lista || []).filter(c => c && c.tema);
+
+  // Si no hay temario analizado, ocultamos el tab por completo.
+  if (items.length === 0) {
+    tabCobertura.hidden = true;
+    coberturaResumen.innerHTML = "";
+    coberturaCont.innerHTML = "";
+    return;
+  }
+  tabCobertura.hidden = false;
+
+  const norm = e => {
+    const s = String(e || "").toLowerCase();
+    if (s.startsWith("cub")) return "cubierto";
+    if (s.startsWith("par")) return "parcial";
+    return "no";
+  };
+
+  let nCub = 0, nPar = 0, nNo = 0;
+  items.forEach(c => {
+    const e = norm(c.estado);
+    if (e === "cubierto") nCub++;
+    else if (e === "parcial") nPar++;
+    else nNo++;
+  });
+
+  const total = items.length;
+  const pct = Math.round((nCub / total) * 100);
+  coberturaResumen.innerHTML =
+    "<div class='cob-stats'>" +
+    "<span class='cob-pill cob-cubierto'>✅ Cubiertos: " + nCub + "</span>" +
+    "<span class='cob-pill cob-parcial'>⚠️ Parciales: " + nPar + "</span>" +
+    "<span class='cob-pill cob-no'>❌ No cubiertos: " + nNo + "</span>" +
+    "</div>" +
+    "<p class='cob-total'>Cobertura completa: <strong>" + nCub + " de " + total +
+    " temas (" + pct + "%)</strong></p>";
+
+  coberturaCont.innerHTML = "";
+  items.forEach(c => {
+    const e = norm(c.estado);
+    const icono = e === "cubierto" ? "✅" : (e === "parcial" ? "⚠️" : "❌");
+    const div = document.createElement("div");
+    div.className = "cob-item cob-" + e;
+    div.innerHTML =
+      "<span class='cob-icono'>" + icono + "</span>" +
+      "<span class='cob-tema'>" + escapar(c.tema) +
+      (c.nota ? "<small class='cob-nota'>" + escapar(c.nota) + "</small>" : "") +
+      "</span>";
+    coberturaCont.appendChild(div);
+  });
 }
 
 // ===================================================================
@@ -410,7 +493,12 @@ quizReset.addEventListener("click", renderQuiz);
 function guardar(materia, nombreArchivo, resultado) {
   let store = {};
   try { store = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { store = {}; }
-  store[materia] = { nombreArchivo, resultado, fecha: new Date().toISOString() };
+  store[materia] = {
+    nombreArchivo,
+    resultado,
+    temario: (temarioInput.value || "").trim(),
+    fecha: new Date().toISOString()
+  };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); } catch { /* cuota llena, ignorar */ }
 }
 
@@ -426,9 +514,11 @@ materiaSelect.addEventListener("change", () => {
   const guardado = cargarGuardado(materiaSelect.value);
   if (guardado) {
     aplicarResultado(guardado.resultado);
+    temarioInput.value = guardado.temario || "";
     fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
     contenido.style.display = "";
   } else {
+    temarioInput.value = "";
     fileStatus.textContent = "";
     contenido.style.display = "none";
   }
@@ -444,6 +534,7 @@ materiaSelect.addEventListener("change", () => {
   const guardado = cargarGuardado(materiaSelect.value);
   if (guardado) {
     aplicarResultado(guardado.resultado);
+    temarioInput.value = guardado.temario || "";
     fileStatus.textContent = "📁 Guardado: " + guardado.nombreArchivo;
     contenido.style.display = "";
   } else {

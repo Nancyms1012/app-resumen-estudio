@@ -353,3 +353,66 @@ body {
   font-size: 1.05rem;
 }
 .resumen-sub:first-child { margin-top: 0; }
+
+
+/* ===== Caja del temario (tabla de contenidos) ===== */
+.temario-box {
+  margin-top: 1rem;
+  text-align: left;
+  border: 1px solid var(--gris-borde);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+}
+.temario-box summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--azul-osc);
+}
+.temario-input {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.6rem;
+  border: 1px solid var(--gris-borde);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  resize: vertical;
+}
+.temario-controls { margin-top: 0.5rem; }
+
+/* ===== Tab Cobertura ===== */
+.cobertura-resumen { margin-bottom: 1rem; }
+.cob-stats {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.cob-pill {
+  padding: 0.3rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.cob-pill.cob-cubierto { background: #dcfce7; color: #14532d; }
+.cob-pill.cob-parcial  { background: #fef9c3; color: #854d0e; }
+.cob-pill.cob-no       { background: #fee2e2; color: #991b1b; }
+.cob-total { color: var(--texto-suave); }
+
+.cob-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+  border-left: 4px solid var(--gris-borde);
+  background: #f8fafc;
+}
+.cob-item.cob-cubierto { border-left-color: var(--verde); }
+.cob-item.cob-parcial  { border-left-color: #eab308; }
+.cob-item.cob-no       { border-left-color: var(--rojo); }
+.cob-icono { flex-shrink: 0; }
+.cob-tema { display: flex; flex-direction: column; }
+.cob-nota { color: var(--texto-suave); font-weight: 400; margin-top: 0.15rem; }

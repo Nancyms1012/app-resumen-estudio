@@ -34,6 +34,7 @@ export async function onRequestPost(context) {
 
   let texto = (body && body.texto ? String(body.texto) : "").trim();
   const materia = (body && body.materia ? String(body.materia) : "la materia").trim();
+  let temario = (body && body.temario ? String(body.temario) : "").trim();
 
   if (!texto) {
     return json({ error: "No se recibió texto para procesar." }, 400);
@@ -47,7 +48,10 @@ export async function onRequestPost(context) {
     recortado = true;
   }
 
-  const prompt = construirPrompt(texto, materia);
+  // El temario (tabla de contenidos) es opcional; lo limitamos por si acaso.
+  if (temario.length > 20000) temario = temario.slice(0, 20000);
+
+  const prompt = construirPrompt(texto, materia, temario);
 
   const payload = {
     contents: [{ parts: [{ text: prompt }] }],
@@ -123,6 +127,7 @@ export async function onRequestPost(context) {
     flashcards: Array.isArray(resultado.flashcards) ? resultado.flashcards : [],
     preguntasExamen: Array.isArray(resultado.preguntasExamen) ? resultado.preguntasExamen : [],
     preguntasNuevas: Array.isArray(resultado.preguntasNuevas) ? resultado.preguntasNuevas : [],
+    cobertura: Array.isArray(resultado.cobertura) ? resultado.cobertura : [],
     // Compatibilidad: si el modelo usara el campo viejo 'preguntas', lo tratamos como nuevas.
     _preguntasLegacy: Array.isArray(resultado.preguntas) ? resultado.preguntas : []
   };
@@ -141,7 +146,8 @@ export async function onRequestPost(context) {
   return json(salida, 200);
 }
 
-function construirPrompt(texto, materia) {
+function construirPrompt(texto, materia, temario) {
+  const hayTemario = temario && temario.length > 0;
   return [
     "Eres un profesor experto que ayuda a estudiantes de secundaria de Costa Rica",
     "a estudiar para un examen. La materia es: " + materia + ".",
@@ -153,7 +159,8 @@ function construirPrompt(texto, materia) {
     '  "puntos": [ { "titulo": "string", "items": ["string", "string"] } ],',
     '  "flashcards": [ { "q": "pregunta corta", "a": "respuesta corta" } ],',
     '  "preguntasExamen": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ],',
-    '  "preguntasNuevas": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ]',
+    '  "preguntasNuevas": [ { "texto": "enunciado", "opciones": ["op A","op B","op C"], "correcta": 0 } ],',
+    '  "cobertura": [ { "tema": "string", "estado": "cubierto|parcial|no", "nota": "breve justificación" } ]',
     "}",
     "",
     "Reglas de EXTENSIÓN (muy importante: el resumen debe ser proporcional al tamaño del material):",
@@ -187,10 +194,24 @@ function construirPrompt(texto, materia) {
     "  Cubre distintos temas del material. Si no hay examen de referencia, igual crea 15-20 preguntas",
     "  de buena calidad basadas en el contenido.",
     "",
+    "Sobre 'cobertura' (comparación con la tabla de contenidos):",
+    hayTemario
+      ? [
+          "- Se te entrega una TABLA DE CONTENIDOS (temario) más abajo. Extrae de ella la lista de",
+          "  temas/subtemas y, para CADA UNO, determina si está presente en el MATERIAL DE ESTUDIO:",
+          "    * 'cubierto': el tema aparece bien desarrollado/explicado en el material.",
+          "    * 'parcial': el tema solo se menciona o se toca superficialmente.",
+          "    * 'no': el tema no aparece en el material.",
+          "  En 'nota' pon una justificación muy breve (una frase). Incluye TODOS los temas del temario,",
+          "  respetando su orden y redacción. Devuelve la lista completa en 'cobertura'."
+        ].join("\n")
+      : "- No se entregó tabla de contenidos: deja 'cobertura' como lista vacía [].",
+    "",
     "MATERIAL DE ESTUDIO:",
     '"""',
     texto,
-    '"""'
+    '"""',
+    hayTemario ? "\nTABLA DE CONTENIDOS (temario a comparar):\n\"\"\"\n" + temario + "\n\"\"\"" : ""
   ].join("\n");
 }
 

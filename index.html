@@ -40,6 +40,20 @@
       </div>
       <ul id="file-list" class="file-list"></ul>
       <p id="file-status" class="file-status"></p>
+
+      <!-- Tabla de contenidos (temario) opcional -->
+      <details class="temario-box">
+        <summary>📋 ¿Quieres comparar con una tabla de contenidos? (opcional)</summary>
+        <p class="hint">Pega aquí el temario oficial (o cárgalo desde un archivo). La app te dirá
+          en el tab <strong>Cobertura</strong> qué temas están cubiertos en el material que subiste
+          y cuáles faltan.</p>
+        <textarea id="temario-input" class="temario-input" rows="6"
+          placeholder="Ejemplo:&#10;Unidad 1: Las sociedades medievales&#10;Unidad 2: La conquista española&#10;Unidad 3: La Revolución Industrial&#10;..."></textarea>
+        <div class="temario-controls">
+          <input type="file" id="temario-file" accept=".pdf,.docx,.txt" hidden />
+          <button id="btn-temario-file" class="btn" type="button">📄 Cargar temario desde archivo</button>
+        </div>
+      </details>
     </section>
 
     <!-- Estado de carga -->
@@ -59,6 +73,7 @@
         <button class="tab" data-tab="puntos" role="tab">🔑 Puntos clave</button>
         <button class="tab" data-tab="flashcards" role="tab">🃏 Flashcards</button>
         <button class="tab" data-tab="preguntas" role="tab">❓ Preguntas</button>
+        <button class="tab" data-tab="cobertura" role="tab" id="tab-cobertura" hidden>✅ Cobertura</button>
       </nav>
 
       <!-- TAB: Resumen -->
@@ -102,6 +117,14 @@
           <button id="quiz-reset" class="btn" type="button">Reiniciar</button>
         </div>
         <div id="quiz-result" class="quiz-result" hidden></div>
+      </section>
+
+      <!-- TAB: Cobertura -->
+      <section class="panel" id="panel-cobertura" role="tabpanel">
+        <h2>Cobertura del temario</h2>
+        <p class="hint">Comparación entre la tabla de contenidos y el material que subiste.</p>
+        <div id="cobertura-resumen" class="cobertura-resumen"></div>
+        <div id="cobertura-cont"></div>
       </section>
     </section>
   </main>
