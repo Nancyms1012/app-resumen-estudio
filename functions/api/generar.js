@@ -58,37 +58,58 @@ export async function onRequestPost(context) {
     generationConfig: {
       temperature: 0.4,
       responseMimeType: "application/json",
-      // Límite de salida amplio para que quepan las preguntas + resumen + puntos + flashcards.
-      // (32000 podía causar respuestas truncadas/timeouts; 16000 es un buen equilibrio.)
-      maxOutputTokens: 16000
+      // Límite de salida. Valores muy altos aumentan los errores 502 de Gemini,
+      // así que usamos un tope moderado pero suficiente.
+      maxOutputTokens: 12000
     }
   };
 
   // Intenta cada modelo en orden; usa el primero que responda bien.
+  // Los errores 500/502/503/429 de Gemini suelen ser temporales: reintentamos hasta 3 veces.
   let geminiResp = null;
   const detalles = [];
+  const REINTENTABLES = [429, 500, 502, 503, 504];
+
+  outer:
   for (const modelo of MODELOS) {
     const url = "https://generativelanguage.googleapis.com/v1beta/" +
       modelo + ":generateContent?key=" + encodeURIComponent(apiKey);
-    try {
-      const r = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
-      if (r.ok) {
-        geminiResp = r;
-        break;
+
+    for (let intento = 1; intento <= 3; intento++) {
+      try {
+        const r = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (r.ok) {
+          geminiResp = r;
+          break outer;
+        }
+        const cuerpo = (await r.text()).slice(0, 150).replace(/\s+/g, " ");
+        detalles.push(modelo.replace("models/", "") + " intento " + intento +
+          " → HTTP " + r.status);
+        // Si es un error temporal, esperamos un poco y reintentamos el mismo modelo.
+        if (REINTENTABLES.includes(r.status) && intento < 3) {
+          await new Promise(res => setTimeout(res, 800 * intento));
+          continue;
+        }
+        break; // error no reintentable: pasamos al siguiente modelo
+      } catch (e) {
+        detalles.push(modelo.replace("models/", "") + " intento " + intento + " → " + e.message);
+        if (intento < 3) {
+          await new Promise(res => setTimeout(res, 800 * intento));
+          continue;
+        }
       }
-      detalles.push(modelo.replace("models/", "") + " → HTTP " + r.status + ": " +
-        (await r.text()).slice(0, 200));
-    } catch (e) {
-      detalles.push(modelo.replace("models/", "") + " → " + e.message);
     }
   }
 
   if (!geminiResp) {
-    return json({ error: "Gemini respondió con error.", detalle: detalles.join(" || ") }, 502);
+    return json({
+      error: "La IA está sobrecargada o rechazó la solicitud. Intenta de nuevo en unos segundos.",
+      detalle: detalles.join(" || ")
+    }, 502);
   }
 
   const data = await geminiResp.json();

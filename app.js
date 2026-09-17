@@ -196,7 +196,11 @@ async function generarConIA(texto, materia, temario) {
   if (!resp.ok) {
     let msg = data.error || ("Error al generar (HTTP " + resp.status + ").");
     if (data.detalle) msg += " (" + data.detalle + ")";
-    else if (!data.error && raw) msg += " " + raw.slice(0, 200);
+    // Si la respuesta es una página HTML (error de Google), no la volcamos entera.
+    else if (!data.error) {
+      msg = "La IA está sobrecargada en este momento (error " + resp.status +
+        "). Espera unos segundos e intenta de nuevo.";
+    }
     throw new Error(msg);
   }
   if (!data || (!data.resumen && !data.puntos && !data.preguntasNuevas)) {
