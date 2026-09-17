@@ -58,9 +58,9 @@ export async function onRequestPost(context) {
     generationConfig: {
       temperature: 0.4,
       responseMimeType: "application/json",
-      // Subimos el límite de salida para que quepan TODAS las preguntas del examen
-      // (p. ej. 55) + las nuevas + resumen extenso + puntos + flashcards.
-      maxOutputTokens: 32000
+      // Límite de salida amplio para que quepan las preguntas + resumen + puntos + flashcards.
+      // (32000 podía causar respuestas truncadas/timeouts; 16000 es un buen equilibrio.)
+      maxOutputTokens: 16000
     }
   };
 
@@ -101,8 +101,14 @@ export async function onRequestPost(context) {
     data.candidates[0].content.parts[0] &&
     data.candidates[0].content.parts[0].text;
 
+  const finishReason = data && data.candidates && data.candidates[0] && data.candidates[0].finishReason;
+
   if (!textoGenerado) {
-    return json({ error: "Gemini no devolvió contenido utilizable." }, 502);
+    let motivo = "Gemini no devolvió contenido utilizable.";
+    if (finishReason === "SAFETY") motivo += " (bloqueado por filtro de seguridad)";
+    else if (finishReason === "MAX_TOKENS") motivo += " (se alcanzó el límite de longitud)";
+    else if (finishReason) motivo += " (finishReason: " + finishReason + ")";
+    return json({ error: motivo }, 502);
   }
 
   let resultado;
@@ -117,7 +123,11 @@ export async function onRequestPost(context) {
   }
 
   if (!resultado) {
-    return json({ error: "No se pudo interpretar la respuesta de la IA." }, 502);
+    let motivo = "No se pudo interpretar la respuesta de la IA.";
+    if (finishReason === "MAX_TOKENS") {
+      motivo += " La respuesta se cortó por ser muy larga. Intenta con menos material.";
+    }
+    return json({ error: motivo }, 502);
   }
 
   // Normaliza la estructura para el frontend.

@@ -188,11 +188,20 @@ async function generarConIA(texto, materia, temario) {
     body: JSON.stringify({ texto, materia, temario: temario || "" })
   });
 
-  const data = await resp.json().catch(() => ({}));
+  // Leemos como texto primero para poder mostrar el motivo real aunque no sea JSON.
+  const raw = await resp.text();
+  let data = {};
+  try { data = JSON.parse(raw); } catch { /* la respuesta no fue JSON */ }
+
   if (!resp.ok) {
-    let msg = data.error || "Error al generar el contenido.";
+    let msg = data.error || ("Error al generar (HTTP " + resp.status + ").");
     if (data.detalle) msg += " (" + data.detalle + ")";
+    else if (!data.error && raw) msg += " " + raw.slice(0, 200);
     throw new Error(msg);
+  }
+  if (!data || (!data.resumen && !data.puntos && !data.preguntasNuevas)) {
+    throw new Error("La IA devolvió una respuesta vacía o incompleta. " +
+      "Puede ser por un documento muy grande o un límite de tiempo. Intenta con menos material.");
   }
   return data;
 }
